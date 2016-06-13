@@ -361,6 +361,40 @@ class EntityEmbedDialog extends FormBase {
       '#title' => $this->t('Selected entity'),
       '#markup' => $entity_label,
     );
+
+    $edit_url = $entity->urlInfo('edit-form');
+    $form['entity_edit'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Edit'),
+      '#url' => $edit_url,
+      '#attributes' => [
+        'target' => '_blank',
+        'class' => ['button'],
+      ],
+    ];
+
+    if ($this->moduleHandler()->moduleExists('entity_browser')) {
+      // Configuration entities have no form object so we provide a fallback
+      // to a normal link styled like a button.
+      try {
+        $edit_form = $this->entityManager()->getFormObject($entity->getEntityTypeId(), 'edit');
+
+        $form['entity_edit'] = [
+          '#type' => 'button',
+          '#executes_submit_callback' => FALSE,
+          '#value' => $this->t('Edit'),
+          '#ajax' => [
+            'url' => \Drupal\Core\Url::fromRoute(
+              'entity_browser.edit_form', [
+                'entity_type' => $entity->getEntityTypeId(),
+                'entity' => $entity->id(),
+              ]
+            )
+          ],
+        ];
+      } catch (\Exception $e) {}
+    }
+
     $form['attributes']['data-entity-type'] = array(
       '#type' => 'hidden',
       '#value' => $entity_element['data-entity-type'],
